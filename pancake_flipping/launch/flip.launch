@@ -1,0 +1,58 @@
+<launch>
+
+  <arg name="robot_model"                       default=""/>
+  <arg name="robot_name"                        default="$(arg robot_model)"/>
+  <arg name="base_link_frame"                   default="base_link"/>
+  <arg name="use_rviz"                          default="true"/>
+  <arg name="record"                            default="false"/>
+  <arg name="playback"                          default="false"/>
+  <arg name="bag_name"                          default="$(arg robot_name)_commands"/>
+  <arg name="launch_driver"                     default="true"/>
+  <arg name="use_sim"                           default="false"/>
+
+  <arg if="$(arg record)"   name="mode_configs" value="$(find pancake_flipping)/config/record_modes.yaml"/>
+  <arg if="$(arg playback)" name="mode_configs" value="$(find pancake_flipping)/config/playback_modes.yaml"/>
+
+  <include if="$(arg launch_driver)" file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch">
+    <arg name="robot_model"                       value="$(arg robot_model)"/>
+    <arg name="robot_name"                        value="$(arg robot_name)"/>
+    <arg name="base_link_frame"                   value="$(arg base_link_frame)"/>
+    <arg name="use_rviz"                          value="$(arg use_rviz)"/>
+    <arg name="mode_configs"                      value="$(arg mode_configs)"/>
+    <arg name="use_sim"                           value="$(arg use_sim)"/>
+  </include>
+
+  <group if="$(arg record)">
+    <node
+      name="clean_publisher"
+      pkg="pancake_flipping"
+      type="clean_pub"
+      respawn="false"
+      output="screen"
+      ns="$(arg robot_name)">
+    </node>
+
+    <node
+      name="rosbag_record_commands"
+      pkg="rosbag"
+      type="record"
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single"/>
+  </group>
+
+  <group if="$(arg playback)">
+    <node
+      name="noisy_publisher"
+      pkg="pancake_flipping"
+      type="noisy_pub"
+      respawn="false"
+      output="screen"
+      ns="$(arg robot_name)">
+    </node>
+    <node 
+      name="rosbag_play_commands"
+      pkg="rosbag"
+      type="play"
+      args="-d 3.0 $(find pancake_flipping)/bag/$(arg bag_name).bag"/>
+  </group>
+
+</launch>

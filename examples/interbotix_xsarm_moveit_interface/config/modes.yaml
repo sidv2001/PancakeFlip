@@ -1,0 +1,15 @@
+groups:
+  arm:
+    operating_mode: position
+    profile_type: velocity
+    profile_velocity: 10
+    profile_acceleration: 10
+    torque_enable: true
+
+singles:
+  gripper:
+    operating_mode: current
+    profile_type: velocity
+    profile_velocity: 10
+    profile_acceleration: 10
+    torque_enable: true

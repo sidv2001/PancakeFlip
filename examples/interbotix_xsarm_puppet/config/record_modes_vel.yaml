@@ -1,0 +1,11 @@
+groups:
+  arm:
+    operating_mode: velocity
+    profile_type: time
+    profile_velocity: 10
+    profile_acceleration: 10
+    torque_enable: false
+
+singles:
+  gripper:
+    torque_enable: false
