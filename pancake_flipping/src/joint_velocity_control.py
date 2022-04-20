@@ -12,7 +12,7 @@ from pos_2_vel import convert_bag_to_vel
 # ______________________________ <CONSTANTS> ___________________________________________________________
 # [Waist, Shoulder, ... , Wrist]
 NEW_HOME = [0, -1.80, 1.55, 0, 0.55, 0]
-POS = [-.5, 0 , 0, 0, 0, 1.57]
+POS = [-.25, 0 , 0, 0, 0, 1.57]
 # These are set through trial and error. Nothing special about these particular values
 # Notice that VEL1 = -VEL2. Running each of these joint velocites for the same amount of time
 # will cancel each other out.
@@ -55,11 +55,11 @@ def main():
 
     # time_differences, velocites = convert_bag_to_vel(args.directory, args.bag_file)
 
-    for time, vel in zip(time_differences, velocites):
-        bot.dxl.robot_write_commands("arm", vel)
-        sleep(time)
+    # for time, vel in zip(time_differences, velocites):
+    #     bot.dxl.robot_write_commands("arm", vel)
+    #     sleep(time)
 
-    bot.dxl.robot_write_commands("arm", HALT)
+    # bot.dxl.robot_write_commands("arm", HALT)
 
     # # TODO(Jonathan): Investigate necessity of the following line before finishing
     # #   * Result 1: Is necessary! Perhaps state is persistent across multiple runs

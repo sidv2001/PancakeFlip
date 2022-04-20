@@ -2,8 +2,6 @@ import json
 import bagpy
 import pandas as pd
 
-
-
 def convert_to_velocites(joint_positions):
     raise NotImplementedError
 
