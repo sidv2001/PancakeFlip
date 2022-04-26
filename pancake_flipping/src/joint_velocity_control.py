@@ -63,11 +63,11 @@ def main():
 
     # # TODO(Jonathan): Investigate necessity of the following line before finishing
     # #   * Result 1: Is necessary! Perhaps state is persistent across multiple runs
-    bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=10, profile_acceleration=10)
+    bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
     # sleep(4)
-    # bot.arm.go_to_home_pose()
+    bot.arm.go_to_home_pose()
     # sleep(5)
-    # bot.arm.go_to_sleep_pose()
+    bot.arm.go_to_sleep_pose()
 
 if __name__=='__main__':
     main()

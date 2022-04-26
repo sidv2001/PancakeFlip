@@ -6,9 +6,11 @@ import json
 import os
 # import rospy
 
-bag_name = 'flip_w_tag.bag'
-BAG_DIR = '/home/robotics/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/pancake_flipping/bag'
-CSV_BASE_DIR = '/home/robotics/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/pancake_flipping/csv'
+
+bag_name = 'pos_ctrl_flip2.bag'
+PKG_DIR = '/home/robotics/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/pancake_flipping'
+BAG_DIR = os.path.join(PKG_DIR, 'bag')
+CSV_BASE_DIR = os.path.join(PKG_DIR, 'csv')
 JOINT_STATES = "/wx250s/joint_states"
 POSES = "ar_pose_marker"
 

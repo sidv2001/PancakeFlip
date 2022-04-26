@@ -1,0 +1,87 @@
+<launch>
+  <arg name="use_infra"                         default="true"/>
+  <arg name="robot_model"                       default="wx250s"/>
+  <arg name="robot_name"                        default="$(arg robot_model)"/>
+  <arg name="base_link_frame"                   default="base_link"/>
+  <arg name="bag_name"                          default=""/>
+  
+  <arg name="record"                            default="false"/>
+  <arg name="playback"                          default="false"/>
+  <arg name="playback_rate"                     default="1"/>
+
+	<arg name="bundle_filename"                   default="pancake" />
+
+  <arg name="rviz_frame"                        default="$(arg robot_name)/$(arg base_link_frame)"/>
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
+
+  <arg if="$(arg record)"   name="mode_configs" value="$(find pancake_flipping)/config/record_modes.yaml"/>
+  <arg if="$(arg playback)" name="mode_configs" value="$(find pancake_flipping)/config/playback_modes.yaml"/>
+
+  <group if="$(arg playback)">
+    <include file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch">
+      <arg name="robot_model"                       value="$(arg robot_model)"/>
+      <arg name="robot_name"                        value="$(arg robot_name)"/>
+      <arg name="base_link_frame"                   value="$(arg base_link_frame)"/>
+      <arg name="show_ar_tag"                       value="true"/>
+      <arg name="use_world_frame"                   value="false"/>
+      <arg name="use_rviz"                          value="false"/>
+      <arg name="mode_configs"                      value="$(arg mode_configs)"/>
+    </include>
+
+    <node
+      name="rviz"
+      pkg="rviz"
+      type="rviz"
+      args="-f $(arg rviz_frame) -d $(arg rvizconfig)"
+      ns="$(arg robot_name)"/>
+  </group>
+  <include if="$(arg record)" file="$(find pancake_flipping)/launch/three_cameras_bundle.launch" >
+    <arg name="use_infra"                       value="$(arg use_infra)"/>
+    <arg name="mode_configs"                    value="$(arg mode_configs)"/>
+    <arg name="rviz_frame"                      value="$(arg robot_name)/$(arg base_link_frame)"/>
+    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
+    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
+	  <arg name="bundle_filename"                 value="$(arg bundle_filename)" />
+  </include>
+
+  <group if="$(arg record)">
+      <node
+      name="clean_publisher"
+      pkg="pancake_flipping"
+      type="clean_pub"
+      respawn="false"
+      output="screen"
+      ns="$(arg robot_name)">
+      </node>
+
+      <node
+      if="$(arg use_infra)"
+      name="rosbag_record_commands"
+      pkg="rosbag"
+      type="record"
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker visualization_marker /camera1/infra1/image_rect_raw /camera2/infra1/image_rect_raw /camera3/infra1/image_rect_raw"/>
+
+      <node
+      unless="$(arg use_infra)"
+      name="rosbag_record_commands"
+      pkg="rosbag"
+      type="record"
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker visualization_marker /camera1/color/image_raw /camera2/color/image_raw /camera3/color/image_raw"/>
+  </group>
+  <group if="$(arg playback)">
+    <node
+      name="noisy_publisher"
+      pkg="pancake_flipping"
+      type="noisy_pub"
+      respawn="true"
+      output="screen"
+      ns="$(arg robot_name)">
+    </node>
+    <node if="$(arg playback)"
+      name="rosbag_play_commands"
+      pkg="rosbag"
+      type="play"
+      args="-d 3.0 -r $(arg playback_rate) $(find pancake_flipping)/bag/$(arg bag_name).bag"/>
+  </group>
+</launch>

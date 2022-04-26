@@ -5,19 +5,31 @@
   <arg name="base_link_frame"                   default="base_link"/>
   <arg name="external_urdf_loc"                 default=""/>
   <arg name="use_rviz"                          default="true"/>
+  <arg name="use_infra"                         default="true"/>
   <arg name="load_configs"                      default="true"/>
 
   <arg name="camID1"                            default="camera1"/>
   <arg name="serial1"                           default="036522072362"/>
   <arg name="camID2"                            default="camera2"/>
   <arg name="serial2"                           default="035422070556"/>
-  <arg name="filters"                           default="spatial,temporal,pointcloud"/>
+  <arg name="filters"                           default="pointcloud"/>
   <arg name="color_fps"                         default="30"/>
   <arg name="color_width"                       default="640"/>
   <arg name="color_height"                      default="480"/>
   <arg name="depth_fps"                         default="30"/>
   <arg name="depth_width"                       default="640"/>
   <arg name="depth_height"                      default="480"/>
+  <arg name="infra_fps"                         default="300"/>
+  <arg name="infra_width"                       default="848"/>
+  <arg name="infra_height"                      default="100"/>
+
+  <arg if="$(arg use_infra)" 
+       name="enable_infra1"                     default="1"/>
+  <arg unless="$(arg use_infra)" 
+       name="enable_infra1"                     default="0"/>
+  <arg name="enable_color"                      default="1"/>
+  <arg name="enable_depth"                      default="1"/>
+
 
   <arg name="filter_ns"                         default="pc_filter"/>
   <arg name="filter_params"                     default="$(find interbotix_xsarm_perception)/config/filter_params.yaml"/>
@@ -28,15 +40,22 @@
 
   <arg name="record"                            default="false"/>
   <arg name="playback"                          default="false"/>
+  <arg name="playback_rate"                     default="1"/>
+
   <arg if="$(arg record)"   name="mode_configs" value="$(find pancake_flipping)/config/record_modes.yaml"/>
   <arg if="$(arg playback)" name="mode_configs" value="$(find pancake_flipping)/config/playback_modes.yaml"/>
 
   <arg name="marker_size"                       default="2" />
 	<arg name="max_new_marker_error"              default="0.08" />
 	<arg name="max_track_error"                   default="0.2" />
+	<arg name="camera1_infra1_topic"              default="/camera1/infra1/image_rect_raw" />
+	<arg name="camera1_infra1_info_topic"         default="/camera1/infra1/camera_info" />
 	<arg name="camera1_image_topic"               default="/camera1/color/image_raw" />
-	<arg name="camera2_image_topic"               default="/camera2/color/image_raw" />
 	<arg name="camera1_info_topic"                default="/camera1/color/camera_info" />
+
+  <arg name="camera2_infra1_topic"              default="/camera2/infra1/image_rect_raw" />
+	<arg name="camera2_infra1_info_topic"         default="/camera2/infra1/camera_info" />
+	<arg name="camera2_image_topic"               default="/camera2/color/image_raw" />
 	<arg name="camera2_info_topic"                default="/camera2/color/camera_info" />
 	<arg name="output_frame"                      default="/wx250s/base_link" />
 
@@ -44,7 +63,10 @@
   <arg name="transform_filepath"                default="$(find interbotix_xsarm_perception)/config/static_transforms.yaml"/>
 
   <arg name="rviz_frame"                        default="$(arg robot_name)/$(arg base_link_frame)"/>
-  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/two_cameras.rviz" />
+  <arg if="$(arg use_infra)" 
+      name="rvizconfig"                         default="$(find pancake_flipping)/rviz/two_cam_infra.rviz" />
+  <arg unless="$(arg use_infra)" 
+      name="rvizconfig"                         default="$(find pancake_flipping)/rviz/two_cameras.rviz" />
 
   <include file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch">
     <arg name="robot_model"                       value="$(arg robot_model)"/>
@@ -58,7 +80,7 @@
   </include>
 
 
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+  <include if="$(arg record)" file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="serial_no"                         value="$(arg serial2)"/>
     <arg name="camera"                            default="$(arg camID2)"/>
     <arg name="filters"                           value="$(arg filters)"/>
@@ -68,9 +90,16 @@
     <arg name="depth_fps"                         value="$(arg depth_fps)"/>
     <arg name="depth_width"                       value="$(arg depth_width)"/>
     <arg name="depth_height"                      value="$(arg depth_height)"/>
+    <arg name="enable_color"                      value="$(arg enable_color)"/>
+    <arg name="enable_infra1"                     value="$(arg enable_infra1)"/>
+    <arg name="infra_fps"                         value="$(arg infra_fps)"/>
+    <arg name="infra_width"                       value="$(arg infra_width)"/>
+    <arg name="infra_height"                      value="$(arg infra_height)"/>
+    <arg name="initial_reset"                     value="true"/>
+    
   </include>
 
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+  <include if="$(arg record)" file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="serial_no"                         value="$(arg serial1)"/>
     <arg name="camera"                            default="$(arg camID1)"/>
     <arg name="filters"                           value="$(arg filters)"/>
@@ -80,6 +109,12 @@
     <arg name="depth_fps"                         value="$(arg depth_fps)"/>
     <arg name="depth_width"                       value="$(arg depth_width)"/>
     <arg name="depth_height"                      value="$(arg depth_height)"/>
+    <arg name="enable_color"                      value="$(arg enable_color)"/>
+    <arg name="enable_infra1"                     value="$(arg enable_infra1)"/>
+    <arg name="infra_fps"                         value="$(arg infra_fps)"/>
+    <arg name="infra_width"                       value="$(arg infra_width)"/>
+    <arg name="infra_height"                      value="$(arg infra_height)"/>
+    <arg name="initial_reset"                     value="true"/>
   </include>
 
   <include file="$(find interbotix_perception_modules)/launch/pc_filter.launch">
@@ -98,7 +133,17 @@
     <arg name="use_pointcloud_tuner_gui"          value="$(arg use_pointcloud_tuner_gui)"/>
   </include>
 
-  <node name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg camera1_infra1_topic)" />
+		<remap from="camera_info"   to="$(arg camera1_infra1_info_topic)" />
+	</node>
+
+  <node unless="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -108,7 +153,17 @@
 		<remap from="camera_info"   to="$(arg camera1_info_topic)" />
 	</node>
 
-  <node name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg camera2_infra1_topic)" />
+		<remap from="camera_info"   to="$(arg camera2_infra1_info_topic)" />
+	</node>
+
+  <node unless="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -142,24 +197,32 @@
       </node>
 
       <node
+      if="$(arg use_infra)"
       name="rosbag_record_commands"
       pkg="rosbag"
       type="record"
-      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker"/>
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker /camera1/infra1/image_rect_raw /camera2/infra1/image_rect_raw"/>
+
+      <node
+      unless="$(arg use_infra)"
+      name="rosbag_record_commands"
+      pkg="rosbag"
+      type="record"
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker /camera1/color/image_raw /camera2/color/image_raw"/>
   </group>
   <group if="$(arg playback)">
-      <node
+    <node
       name="noisy_publisher"
       pkg="pancake_flipping"
       type="noisy_pub"
-      respawn="false"
+      respawn="true"
       output="screen"
       ns="$(arg robot_name)">
-      </node>
-      <node 
+    </node>
+    <node if="$(arg playback)"
       name="rosbag_play_commands"
       pkg="rosbag"
       type="play"
-      args="-d 3.0 $(find pancake_flipping)/bag/$(arg bag_name).bag"/>
+      args="-d 3.0 -r $(arg playback_rate) $(find pancake_flipping)/bag/$(arg bag_name).bag"/>
   </group>
 </launch>

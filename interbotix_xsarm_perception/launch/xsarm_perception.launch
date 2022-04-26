@@ -8,6 +8,7 @@
   <arg name="external_urdf_loc"                 default=""/>
   <arg name="use_rviz"                          default="true"/>
   <arg name="load_configs"                      default="true"/>
+  <arg name="serial1"                           default="036522072362"/>
 
   <arg name="filters"                           default="pointcloud"/>
   <arg name="color_fps"                         default="30"/>
@@ -56,6 +57,7 @@
   </include>
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                         value="$(arg serial1)"/>
     <arg name="filters"                           value="$(arg filters)"/>
     <arg name="color_fps"                         value="$(arg color_fps)"/>
     <arg name="color_width"                       value="$(arg color_width)"/>
@@ -92,6 +94,8 @@
     <arg name="load_transforms"                   value="$(arg load_transforms)"/>
     <arg name="transform_filepath"                value="$(arg transform_filepath)"/>
   </include> -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
+      args="0.41532 0.01 0.607188   -0.00887947 0.70425 -0.00487402 0.70988 wx250s/base_link camera_link" />
 
   <node if="$(arg use_rviz)"
     name="rviz"

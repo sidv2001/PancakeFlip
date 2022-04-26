@@ -292,7 +292,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /pc_filter/pointcloud/filtered
+      Topic: /pc_filter1/pointcloud/filtered
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -322,14 +322,14 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /pc_filter/pointcloud/objects
+      Topic: /pc_filter1/pointcloud/objects
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /pc_filter/markers/crop_box
+      Marker Topic: /pc_filter1/markers/crop_box
       Name: CropBoxMarker
       Namespaces:
         {}
@@ -337,7 +337,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /pc_filter/markers/objects
+      Marker Topic: /pc_filter1/markers/objects
       Name: ObjectMarker
       Namespaces:
         {}

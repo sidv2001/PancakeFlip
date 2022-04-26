@@ -1,23 +1,41 @@
 <launch>
-
   <arg name="robot_model"                       default="wx250s"/>
   <arg name="robot_name"                        default="$(arg robot_model)"/>
   <arg name="base_link_frame"                   default="base_link"/>
   <arg name="external_urdf_loc"                 default=""/>
   <arg name="use_rviz"                          default="true"/>
-  <arg name="load_configs"                      default="true"/>
+  <arg name="mode_configs"                      default="$(find pancake_flipping)/config/record_modes.yaml"/>
 
+  <arg name="fast_boi"                          default="false"/>
   <arg name="camID1"                            default="camera1"/>
   <arg name="serial1"                           default="036522072362"/>
   <arg name="camID2"                            default="camera2"/>
   <arg name="serial2"                           default="035422070556"/>
   <arg name="filters"                           default="spatial,temporal,pointcloud"/>
-  <arg name="color_fps"                         default="30"/>
+  <arg name="color_fps"                         default="60"/>
   <arg name="color_width"                       default="640"/>
   <arg name="color_height"                      default="480"/>
-  <arg name="depth_fps"                         default="30"/>
+  <arg name="depth_fps"                         default="60"/>
   <arg name="depth_width"                       default="640"/>
   <arg name="depth_height"                      default="480"/>
+  <arg name="infra_fps"                         default="300"           if="$(arg fast_boi)"/>
+  <arg name="infra_fps"                         default="60"       unless="$(arg fast_boi)"/>
+  <arg name="infra_width"                       default="848"/>
+  <arg name="infra_height"                      default="100"           if="$(arg fast_boi)"/>
+  <arg name="infra_height"                      default="480"       unless="$(arg fast_boi)"/>
+	<arg name="camera1_color_image_topic"         default="/$(arg camID1)/color/image_raw" />
+	<arg name="camera1_color_info_topic"          default="/$(arg camID1)/color/camera_info" />
+	<arg name="camera2_color_image_topic"         default="/$(arg camID2)/color/image_raw" />
+	<arg name="camera2_color_info_topic"          default="/$(arg camID2)/color/camera_info" />
+	<arg name="camera1_infra1_topic"              default="/$(arg camID1)/infra1/image_rect_raw" />
+	<arg name="camera1_infra1_info_topic"         default="/$(arg camID1)/infra1/camera_info" />
+	<arg name="camera1_infra2_topic"              default="/$(arg camID1)/infra2/image_rect_raw" />
+	<arg name="camera1_infra2_info_topic"         default="/$(arg camID1)/infra2/camera_info" />
+  <arg name="camera2_infra1_topic"              default="/$(arg camID2)/infra1/image_rect_raw" />
+	<arg name="camera2_infra2_topic"              default="/$(arg camID2)/infra2/image_rect_raw" />
+	<arg name="camera2_infra1_info_topic"         default="/$(arg camID2)/infra1/camera_info" />
+	<arg name="camera2_infra2_info_topic"         default="/$(arg camID2)/infra2/camera_info" />
+	<arg name="output_frame"                      default="$(arg robot_name)/$(arg base_link_frame)" />
 
   <arg name="filter_ns"                         default="pc_filter"/>
   <arg name="filter_params"                     default="$(find interbotix_xsarm_perception)/config/filter_params.yaml"/>
@@ -26,20 +44,22 @@
   <arg name="cloud_topic1"                      default="/$(arg camID1)/depth/color/points"/>
   <arg name="cloud_topic2"                      default="/$(arg camID2)/depth/color/points"/>
 
-  <arg name="marker_size"                       default="4" />
+  <arg name="use_infra"                         default="true"/>
+  <arg name="enable_infra1"                     default="1"             if="$(arg use_infra)" />
+  <arg name="enable_infra1"                     default="0"             unless="$(arg use_infra)" />
+  <arg name="enable_infra2"                     default="0"/>
+  <arg name="enable_color"                      default="0"             if="$(arg use_infra)"/>
+  <arg name="enable_color"                      default="1"             unless="$(arg use_infra)"/>
+  <arg name="enable_depth"                      default="0"             if="$(arg use_infra)"/>
+  <arg name="enable_depth"                      default="1"             unless="$(arg use_infra)"/>
+
+  <arg name="marker_size"                       default="2" />
 	<arg name="max_new_marker_error"              default="0.08" />
 	<arg name="max_track_error"                   default="0.2" />
-	<arg name="camera1_image_topic"               default="/camera1/color/image_raw" />
-	<arg name="camera2_image_topic"               default="/camera2/color/image_raw" />
-	<arg name="camera1_info_topic"                default="/camera1/color/camera_info" />
-	<arg name="camera2_info_topic"                default="/camera2/color/camera_info" />
-	<arg name="output_frame"                      default="/wx250s/base_link" />
-
-  <arg name="load_transforms"                   default="true"/>
-  <arg name="transform_filepath"                default="$(find interbotix_xsarm_perception)/config/static_transforms.yaml"/>
 
   <arg name="rviz_frame"                        default="$(arg robot_name)/$(arg base_link_frame)"/>
-  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/two_cameras.rviz" />
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/two_cameras_infra.rviz"     if="$(arg use_infra)" />
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/two_cameras.rviz"       unless="$(arg use_infra)" />
 
   <include file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch">
     <arg name="robot_model"                       value="$(arg robot_model)"/>
@@ -49,25 +69,12 @@
     <arg name="use_world_frame"                   value="false"/>
     <arg name="external_urdf_loc"                 value="$(arg external_urdf_loc)"/>
     <arg name="use_rviz"                          value="false"/>
-    <arg name="load_configs"                      value="$(arg load_configs)"/>
-  </include>
-
-
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <arg name="serial_no"                         value="$(arg serial2)"/>
-    <arg name="camera"                            default="$(arg camID2)"/>
-    <arg name="filters"                           value="$(arg filters)"/>
-    <arg name="color_fps"                         value="$(arg color_fps)"/>
-    <arg name="color_width"                       value="$(arg color_width)"/>
-    <arg name="color_height"                      value="$(arg color_height)"/>
-    <arg name="depth_fps"                         value="$(arg depth_fps)"/>
-    <arg name="depth_width"                       value="$(arg depth_width)"/>
-    <arg name="depth_height"                      value="$(arg depth_height)"/>
+    <arg name="mode_configs"                      value="$(arg mode_configs)"/>
   </include>
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="serial_no"                         value="$(arg serial1)"/>
-    <arg name="camera"                            default="$(arg camID1)"/>
+    <arg name="camera"                            value="$(arg camID1)"/>
     <arg name="filters"                           value="$(arg filters)"/>
     <arg name="color_fps"                         value="$(arg color_fps)"/>
     <arg name="color_width"                       value="$(arg color_width)"/>
@@ -75,6 +82,32 @@
     <arg name="depth_fps"                         value="$(arg depth_fps)"/>
     <arg name="depth_width"                       value="$(arg depth_width)"/>
     <arg name="depth_height"                      value="$(arg depth_height)"/>
+    <arg name="enable_color"                      value="$(arg enable_color)"/>
+    <arg name="enable_infra1"                     value="$(arg enable_infra1)"/>
+    <arg name="enable_infra2"                     value="$(arg enable_infra2)"/>
+    <arg name="infra_fps"                         value="$(arg infra_fps)"/>
+    <arg name="infra_width"                       value="$(arg infra_width)"/>
+    <arg name="infra_height"                      value="$(arg infra_height)"/>
+    <arg name="initial_reset"                     value="true"/>
+  </include>
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                         value="$(arg serial2)"/>
+    <arg name="camera"                            value="$(arg camID2)"/>
+    <arg name="filters"                           value="$(arg filters)"/>
+    <arg name="color_fps"                         value="$(arg color_fps)"/>
+    <arg name="color_width"                       value="$(arg color_width)"/>
+    <arg name="color_height"                      value="$(arg color_height)"/>
+    <arg name="depth_fps"                         value="$(arg depth_fps)"/>
+    <arg name="depth_width"                       value="$(arg depth_width)"/>
+    <arg name="depth_height"                      value="$(arg depth_height)"/>
+    <arg name="enable_color"                      value="$(arg enable_color)"/>
+    <arg name="enable_infra1"                     value="$(arg enable_infra1)"/>
+    <arg name="enable_infra2"                     value="$(arg enable_infra2)"/>
+    <arg name="infra_fps"                         value="$(arg infra_fps)"/>
+    <arg name="infra_width"                       value="$(arg infra_width)"/>
+    <arg name="infra_height"                      value="$(arg infra_height)"/>
+    <arg name="initial_reset"                     value="true"/>
   </include>
 
   <include file="$(find interbotix_perception_modules)/launch/pc_filter.launch">
@@ -93,24 +126,44 @@
     <arg name="use_pointcloud_tuner_gui"          value="$(arg use_pointcloud_tuner_gui)"/>
   </include>
 
-  <node name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
 
-		<remap from="camera_image"  to="$(arg camera1_image_topic)" />
-		<remap from="camera_info"   to="$(arg camera1_info_topic)" />
+		<remap from="camera_image"  to="$(arg camera1_infra1_topic)" />
+		<remap from="camera_info"   to="$(arg camera1_infra1_info_topic)" />
 	</node>
 
-  <node name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+  <node unless="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
 
-		<remap from="camera_image"  to="$(arg camera2_image_topic)" />
-		<remap from="camera_info"   to="$(arg camera2_info_topic)" />
+		<remap from="camera_image"  to="$(arg camera1_color_image_topic)" />
+		<remap from="camera_info"   to="$(arg camera1_color_info_topic)" />
+	</node>
+
+  <node if="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg camera2_infra1_topic)" />
+		<remap from="camera_info"   to="$(arg camera2_infra1_info_topic)" />
+	</node>
+
+  <node unless="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+		<param name="marker_size"           type="double" value="$(arg marker_size)" />
+		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+
+		<remap from="camera_image"  to="$(arg camera2_color_image_topic)" />
+		<remap from="camera_info"   to="$(arg camera2_color_info_topic)" />
 	</node>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster1"

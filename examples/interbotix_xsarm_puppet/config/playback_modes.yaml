@@ -1,6 +1,6 @@
 groups:
   arm:
-    operating_mode: velocity
+    operating_mode: position
     profile_type: time
     profile_velocity: 0
     profile_acceleration: 0
