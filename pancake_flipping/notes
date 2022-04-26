@@ -1,0 +1,14 @@
+Real Sense Camera Serial Numbers:
+_________________________________
+Cam 1 (Overhead):           036522072362
+Cam 2 (Direct Facing):      035422070556
+Cam 3 (Overhead 2):         036222071075
+
+roslaunch realsense2_camera rs_camera.launch camera:=camera1 serial_no:=036522072362 filters:=spatial,temporal,pointcloud
+roslaunch realsense2_camera rs_camera.launch camera:=camera2 serial_no:=035422070556 filters:=spatial,temporal,pointcloud
+roslaunch realsense2_camera rs_camera.launch camera:=camera3 serial_no:=036222071075 filters:=spatial,temporal,pointcloud
+
+roslaunch realsense2_camera rs_camera.launch camera:=camera1 serial_no:=035422070556 filters:=spatial,temporal,pointcloud
+roslaunch realsense2_camera rs_camera.launch camera:=camera2 serial_no:=036522072362 filters:=spatial,temporal,pointcloud
+
+python3 scripts/set_cams_transforms.py camera1_link camera2_link 0.248 -0.034 0.29 2.75 90.977 180

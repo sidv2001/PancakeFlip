@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     interbotix_xs_msgs::JointGroupCommand pos_msg;
     pos_msg.name = "arm";
     for (auto const& index : arm_info_srv.response.joint_state_indices)
-      pos_msg.cmd.push_back(joint_states.velocity.at(index));
+      pos_msg.cmd.push_back(joint_states.position.at(index));
     pub_group.publish(pos_msg);
 
     interbotix_xs_msgs::JointSingleCommand single_msg;

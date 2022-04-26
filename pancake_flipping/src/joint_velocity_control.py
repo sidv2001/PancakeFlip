@@ -12,7 +12,7 @@ from pos_2_vel import convert_bag_to_vel
 # ______________________________ <CONSTANTS> ___________________________________________________________
 # [Waist, Shoulder, ... , Wrist]
 NEW_HOME = [0, -1.80, 1.55, 0, 0.55, 0]
-POS = [-.5, 0 , 0, 0, 0, 1.57]
+POS = [-.25, 0 , 0, 0, 0, 1.57]
 # These are set through trial and error. Nothing special about these particular values
 # Notice that VEL1 = -VEL2. Running each of these joint velocites for the same amount of time
 # will cancel each other out.
@@ -55,19 +55,19 @@ def main():
 
     # time_differences, velocites = convert_bag_to_vel(args.directory, args.bag_file)
 
-    for time, vel in zip(time_differences, velocites):
-        bot.dxl.robot_write_commands("arm", vel)
-        sleep(time)
+    # for time, vel in zip(time_differences, velocites):
+    #     bot.dxl.robot_write_commands("arm", vel)
+    #     sleep(time)
 
-    bot.dxl.robot_write_commands("arm", HALT)
+    # bot.dxl.robot_write_commands("arm", HALT)
 
     # # TODO(Jonathan): Investigate necessity of the following line before finishing
     # #   * Result 1: Is necessary! Perhaps state is persistent across multiple runs
-    bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=10, profile_acceleration=10)
+    bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
     # sleep(4)
-    # bot.arm.go_to_home_pose()
+    bot.arm.go_to_home_pose()
     # sleep(5)
-    # bot.arm.go_to_sleep_pose()
+    bot.arm.go_to_sleep_pose()
 
 if __name__=='__main__':
     main()
