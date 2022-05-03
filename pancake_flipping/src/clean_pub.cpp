@@ -3,14 +3,68 @@
 #include "interbotix_xs_msgs/JointGroupCommand.h"
 #include "interbotix_xs_msgs/JointSingleCommand.h"
 #include "interbotix_xs_msgs/RobotInfo.h"
+#include <ar_track_alvar_msgs/AlvarMarker.h>
+#include <ar_track_alvar_msgs/AlvarMarkers.h>
+#include <ar_track_alvar_msgs/AlvarMarkersMultiCam.h>
+#include <message_filters/synchronizer.h>
+#include <boost/shared_ptr.hpp>
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
 
-sensor_msgs::JointState joint_states;         // globally available joint_states message
+ros::Publisher pub_ar_tags;
+sensor_msgs::JointState joints;         // globally available joint_states message
 
-/// @brief Joint state callback function
-/// @param msg - updated joint states
+void ar_pose_cb(const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam1,
+                const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam2,
+                const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam3,
+                const boost::shared_ptr<const sensor_msgs::JointState>& joint_states) {
+  joints = *joint_states;
+  ar_track_alvar_msgs::AlvarMarkersMultiCam ar_cams;
+  ar_cams.cam1_marker = ar_cam1->markers[0];
+  ar_cams.cam2_marker = ar_cam2->markers[0];
+  ar_cams.cam3_marker = ar_cam3->markers[0];
+  ar_cams.joint_states = *joint_states;
+
+  /////// Create average of channels ////////
+
+  // Create arrays of valid data
+  std::vector <ar_track_alvar_msgs::AlvarMarker> valid_markers;
+  if (ar_cam1->markers[0].header.frame_id != "null") valid_markers.push_back(ar_cam1->markers[0]);
+  if (ar_cam2->markers[0].header.frame_id != "null") valid_markers.push_back(ar_cam2->markers[0]);
+  if (ar_cam3->markers[0].header.frame_id != "null") valid_markers.push_back(ar_cam3->markers[0]);
+
+  // Loop through valid markers
+  int total_valid = valid_markers.size();
+  if (total_valid == 0) {
+    ar_cams.avg_marker = ar_cam1->markers[0]; // all markers are equivalently dummy markers 
+    pub_ar_tags.publish(ar_cams);
+    return;
+  }
+  long long values [7];           // [px, py, pz, qx, qy, qz, qw]
+  for (ar_track_alvar_msgs::AlvarMarker const& valid_marker : valid_markers) {
+    values[0] += valid_marker.pose.pose.position.x;
+    values[1] += valid_marker.pose.pose.position.y;
+    values[2] += valid_marker.pose.pose.position.z;
+    values[3] += valid_marker.pose.pose.orientation.x;
+    values[4] += valid_marker.pose.pose.orientation.y;
+    values[5] += valid_marker.pose.pose.orientation.z;
+    values[6] += valid_marker.pose.pose.orientation.w;
+  }
+
+  ar_cams.avg_marker.pose.pose.position.x    = values[0]/total_valid;
+  ar_cams.avg_marker.pose.pose.position.y    = values[1]/total_valid;
+  ar_cams.avg_marker.pose.pose.position.z    = values[2]/total_valid;
+  ar_cams.avg_marker.pose.pose.orientation.x = values[3]/total_valid;
+  ar_cams.avg_marker.pose.pose.orientation.y = values[4]/total_valid;
+  ar_cams.avg_marker.pose.pose.orientation.z = values[5]/total_valid;
+  ar_cams.avg_marker.pose.pose.orientation.w = values[6]/total_valid;
+
+  pub_ar_tags.publish(ar_cams);
+}
+
 void joint_state_cb(const sensor_msgs::JointState &msg)
 {
-  joint_states = msg;
+  
 }
 
 int main(int argc, char **argv)
@@ -18,14 +72,27 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "xsarm_puppet_single");
   ros::NodeHandle n;
 
+  typedef message_filters::sync_policies::ApproximateTime<ar_track_alvar_msgs::AlvarMarkers, ar_track_alvar_msgs::AlvarMarkers, ar_track_alvar_msgs::AlvarMarkers> MySyncPolicy;
+  // ExactTime takes a queue size as its constructor argument, hence MySyncPolicy(10)
+
   // Subscribe to the robot's joint states and publish those states as joint commands so that rosbag can record them
-  ros::Subscriber sub_positions = n.subscribe("joint_states", 1, joint_state_cb);
+  // ros::Subscriber sub_positions = n.subscribe("joint_states", 1, joint_state_cb);
+  message_filters::Subscriber<sensor_msgs::JointState>           joint_pos_sub   (n, "joint_states",            1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam1_sub(n, "ar_pose_markers_camera1", 1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam2_sub(n, "ar_pose_markers_camera2", 1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam3_sub(n, "ar_pose_markers_camera3", 1);
+  pub_ar_tags = n.advertise<ar_track_alvar_msgs::AlvarMarkersMultiCam>("ar_pose_markers_multi_cam", 1);
   ros::Publisher pub_group = n.advertise<interbotix_xs_msgs::JointGroupCommand>("clean_cmds/joint_group", 1);
   ros::Publisher pub_single = n.advertise<interbotix_xs_msgs::JointSingleCommand>("clean_cmds/joint_single", 1);
   // Get some robot info to figure out how many joints the robot has
   ros::ServiceClient srv_robot_info = n.serviceClient<interbotix_xs_msgs::RobotInfo>("get_robot_info");
+  message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), ar_pose_cam1_sub, ar_pose_cam2_sub, ar_pose_cam3_sub, joint_pos_sub);
+  ROS_WARN("\n\n\n BEFORE \n\n\n");
+  sync.registerCallback(boost::bind(&ar_pose_cb, _1, _2, _3));
+  ROS_WARN("\n\n\n AFTER \n\n\n");
 
-  ros::Rate loop_rate(50);
+
+  ros::Rate loop_rate(60);
   bool success;
 
   // Wait for the 'arm_node' to finish initializing

@@ -38,6 +38,7 @@ def main():
 
     # Position Control
     bot.arm.go_to_home_pose()
+    sleep(100000)
     bot.arm.set_joint_positions(POS)
     bot.arm.go_to_home_pose()
     
