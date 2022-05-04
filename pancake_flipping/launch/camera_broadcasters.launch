@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find pancake_flipping)/launch/cam1_calibration_2x2.launch"/>
+    <include file="$(find pancake_flipping)/launch/cam2_calibration_2x2.launch"/>
+    <include file="$(find pancake_flipping)/launch/cam3_calibration_2x2.launch"/>
+</launch>

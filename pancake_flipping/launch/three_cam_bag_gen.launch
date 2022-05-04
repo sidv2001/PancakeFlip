@@ -9,7 +9,12 @@
   <arg name="playback"                          default="false"/>
   <arg name="playback_rate"                     default="1"/>
 
-	<arg name="bundle_filename"                   default="pancake" />
+  <arg name="marker_size"                       default="3.75" />
+	<arg name="bundle_filename"                   default="big_pancake" />
+
+  <arg name="camID1"                            default="camera1"/>
+  <arg name="camID2"                            default="camera2"/>
+  <arg name="camID3"                            default="camera3"/>
 
   <arg name="rviz_frame"                        default="$(arg robot_name)/$(arg base_link_frame)"/>
   <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
@@ -36,16 +41,23 @@
       args="-f $(arg rviz_frame) -d $(arg rvizconfig)"
       ns="$(arg robot_name)"/>
   </group>
-  <include if="$(arg record)" file="$(find pancake_flipping)/launch/three_cameras_bundle.launch" >
-    <arg name="use_infra"                       value="$(arg use_infra)"/>
-    <arg name="mode_configs"                    value="$(arg mode_configs)"/>
-    <arg name="rviz_frame"                      value="$(arg robot_name)/$(arg base_link_frame)"/>
-    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
-    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
-	  <arg name="bundle_filename"                 value="$(arg bundle_filename)" />
-  </include>
+
+
 
   <group if="$(arg record)">
+
+    <include file="$(find pancake_flipping)/launch/three_cameras_multi_cam.launch" >
+      <arg name="use_infra"                       value="$(arg use_infra)"/>
+      <arg name="mode_configs"                    value="$(arg mode_configs)"/>
+      <arg name="rviz_frame"                      value="$(arg robot_name)/$(arg base_link_frame)"/>
+      <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
+      <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
+      <arg name="bundle_filename"                 value="$(arg bundle_filename)" />
+      <arg name="camID1"                          value="$(arg camID1)"/>
+      <arg name="camID2"                          value="$(arg camID2)"/>
+      <arg name="camID3"                          value="$(arg camID3)"/>
+    </include>
+
       <node
       name="clean_publisher"
       pkg="pancake_flipping"
@@ -60,14 +72,30 @@
       name="rosbag_record_commands"
       pkg="rosbag"
       type="record"
-      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker visualization_marker /camera1/infra1/image_rect_raw /camera2/infra1/image_rect_raw /camera3/infra1/image_rect_raw"/>
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag 
+      /$(arg robot_name)/clean_cmds/joint_group 
+      /$(arg robot_name)/clean_cmds/joint_single 
+      /$(arg robot_name)/joint_states 
+      /wx250s/multicam_pose 
+      visualization_marker 
+      /camera1/infra1/image_rect_raw 
+      /camera2/infra1/image_rect_raw 
+      /camera3/infra1/image_rect_raw"/>
 
       <node
       unless="$(arg use_infra)"
       name="rosbag_record_commands"
       pkg="rosbag"
       type="record"
-      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag /$(arg robot_name)/clean_cmds/joint_group /$(arg robot_name)/clean_cmds/joint_single /$(arg robot_name)/joint_states ar_pose_marker visualization_marker /camera1/color/image_raw /camera2/color/image_raw /camera3/color/image_raw"/>
+      args="record -O $(find pancake_flipping)/bag/$(arg bag_name).bag 
+      /$(arg robot_name)/clean_cmds/joint_group 
+      /$(arg robot_name)/clean_cmds/joint_single 
+      /$(arg robot_name)/joint_states 
+      /wx250s/multicam_pose 
+      visualization_marker 
+      /camera1/color/image_raw 
+      /camera2/color/image_raw 
+      /camera3/color/image_raw"/>
   </group>
   <group if="$(arg playback)">
     <node

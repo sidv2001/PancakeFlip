@@ -4,7 +4,7 @@
   <arg name="base_link_frame"                   default="base_link"/>
   <arg name="external_urdf_loc"                 default=""/>
   <arg name="use_rviz"                          default="true"/>
-  <arg name="mode_configs"                      default="$(find pancake_flipping)/config/record_modes.yaml"/>
+  <arg name="mode_configs"                      default="$(find pancake_flipping)/config/playback_modes.yaml"/>
   <!-- description and control args -->
   <arg name="camID1"                            default="camera1"/>
   <arg name="camID2"                            default="camera2"/>
@@ -62,6 +62,7 @@
 	<arg name="output_frame"                      default="$(arg robot_name)/$(arg base_link_frame)" />
 
   <arg name="marker_size"                       default="2" />
+  <arg name="diameter"                          default="5" />
 	<arg name="max_new_marker_error"              default="0.08" />
 	<arg name="max_track_error"                   default="0.2" />
 
@@ -169,6 +170,7 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID1)"/>
 
 		<remap from="camera_image"  to="$(arg camera1_infra1_topic)" />
 		<remap from="camera_info"   to="$(arg camera1_infra1_info_topic)" />
@@ -179,6 +181,7 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID1)"/>
 
 		<remap from="camera_image"  to="$(arg camera1_color_image_topic)" />
 		<remap from="camera_info"   to="$(arg camera1_color_info_topic)" />
@@ -189,6 +192,7 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID2)"/>
 
 		<remap from="camera_image"  to="$(arg camera2_infra1_topic)" />
 		<remap from="camera_info"   to="$(arg camera2_infra1_info_topic)" />
@@ -199,6 +203,7 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID2)"/>
 
 		<remap from="camera_image"  to="$(arg camera2_color_image_topic)" />
 		<remap from="camera_info"   to="$(arg camera2_color_info_topic)" />
@@ -209,6 +214,7 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID3)"/>
 
 		<remap from="camera_image"  to="$(arg camera3_infra1_topic)" />
 		<remap from="camera_info"   to="$(arg camera3_infra1_info_topic)" />
@@ -219,19 +225,13 @@
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
 		<param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <param name="camera"                type="string" value="$(arg camID3)"/>
 
 		<remap from="camera_image"  to="$(arg camera3_color_image_topic)" />
 		<remap from="camera_info"   to="$(arg camera3_color_info_topic)" />
 	</node>
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster1"
-      args="0.41532 0.01 0.607188   -0.00887947 0.70425 -0.00487402 0.70988 wx250s/base_link camera1_link" />
-
-  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster2"
-      args="0.68705 -0.0118019 0.319717   0.040387 0.0381147 0.998241 -0.0207859 wx250s/base_link camera2_link" />
-
-  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster3"
-      args="0.6902 0.0765373 0.61501   0.0287035 0.912898 -0.0017978 0.407174 wx250s/base_link camera3_link" />
+  <include file="$(find pancake_flipping)/launch/camera_broadcasters.launch"/>
 
   <node if="$(arg use_rviz)"
     name="rviz"

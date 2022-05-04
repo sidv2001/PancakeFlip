@@ -13,12 +13,10 @@
 
 ros::Publisher pub_ar_tags;
 sensor_msgs::JointState joint_states;         // globally available joint_states message
-ar_track_alvar_msgs::AlvarMarkersMultiCam synced_pose;         // globally available joint_states message
 
 void ar_pose_cb(const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam1,
                 const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam2,
                 const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>& ar_cam3) {
-  ROS_WARN("\n\nCB");
   ar_track_alvar_msgs::AlvarMarkersMultiCam ar_cams;
   ar_cams.cam1_marker = ar_cam1->markers[0];
   ar_cams.cam2_marker = ar_cam2->markers[0];
@@ -72,12 +70,6 @@ void joint_state_cb(const sensor_msgs::JointState &msg)
   joint_states = msg;
 }
 
-void synced_pose_cb(const ar_track_alvar_msgs::AlvarMarkersMultiCam &msg)
-{
-  ROS_WARN("HI");
-  synced_pose = msg;
-}
-
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "xsarm_puppet_single");
@@ -91,28 +83,23 @@ int main(int argc, char **argv)
   message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam1_sub(n, "ar_pose_markers_camera1", 1);
   message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam2_sub(n, "ar_pose_markers_camera2", 1);
   message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam3_sub(n, "ar_pose_markers_camera3", 1);
-  pub_ar_tags = n.advertise<ar_track_alvar_msgs::AlvarMarkersMultiCam>("synced_pose", 1);
+  pub_ar_tags = n.advertise<ar_track_alvar_msgs::AlvarMarkersMultiCam>("ar_pose_markers_multi_cam", 1);
   ros::Publisher pub_group = n.advertise<interbotix_xs_msgs::JointGroupCommand>("clean_cmds/joint_group", 1);
   ros::Publisher pub_single = n.advertise<interbotix_xs_msgs::JointSingleCommand>("clean_cmds/joint_single", 1);
   // Get some robot info to figure out how many joints the robot has
   ros::ServiceClient srv_robot_info = n.serviceClient<interbotix_xs_msgs::RobotInfo>("get_robot_info");
   message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), ar_pose_cam1_sub, ar_pose_cam2_sub, ar_pose_cam3_sub);
   sync.registerCallback(boost::bind(&ar_pose_cb, _1, _2, _3));
-  ros::Subscriber synced_pose = n.subscribe("synced_pose", 1, synced_pose_cb);
 
   ros::Rate loop_rate(60);
   bool success;
 
   // Wait for the 'arm_node' to finish initializing
-  while ((pub_group.getNumSubscribers() < 1 || joint_states.position.size() < 1 || pub_ar_tags.getNumSubscribers() < 1) && ros::ok())
+  while ((pub_group.getNumSubscribers() < 1 || joint_states.position.size() < 1) && ros::ok())
   {
     ros::spinOnce();
-    ROS_WARN("SPINNING.");
-    ROS_WARN_STREAM(pub_ar_tags.getNumSubscribers());
     loop_rate.sleep();
   }
-  ROS_INFO("All publishers are ready.");
-  
 
   // Get the number of joints that the first robot has
   interbotix_xs_msgs::RobotInfo arm_info_srv;
@@ -135,22 +122,22 @@ int main(int argc, char **argv)
     ROS_ERROR("Could not get info on the 'gripper' joint.");
     return 1;
   }
-  // ros::spin();
-  // size_t cntr = 0;
+
+  size_t cntr = 0;
   
   while (ros::ok())
   {
-    // // put joint positions from the robot as position commands for itself
-    // interbotix_xs_msgs::JointGroupCommand pos_msg;
-    // pos_msg.name = "arm";
-    // for (auto const& index : arm_info_srv.response.joint_state_indices)
-    //   pos_msg.cmd.push_back(joint_states.position.at(index));
-    // pub_group.publish(pos_msg);
+    // put joint positions from the robot as position commands for itself
+    interbotix_xs_msgs::JointGroupCommand pos_msg;
+    pos_msg.name = "arm";
+    for (auto const& index : arm_info_srv.response.joint_state_indices)
+      pos_msg.cmd.push_back(joint_states.position.at(index));
+    pub_group.publish(pos_msg);
 
-    // interbotix_xs_msgs::JointSingleCommand single_msg;
-    // single_msg.name = "gripper";
-    // single_msg.cmd = joint_states.position.at(gripper_info_srv.response.joint_state_indices.at(0))*2;
-    // pub_single.publish(single_msg);
+    interbotix_xs_msgs::JointSingleCommand single_msg;
+    single_msg.name = "gripper";
+    single_msg.cmd = joint_states.position.at(gripper_info_srv.response.joint_state_indices.at(0))*2;
+    pub_single.publish(single_msg);
 
     ros::spinOnce();
     loop_rate.sleep();

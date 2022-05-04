@@ -62,7 +62,7 @@
 	<arg name="camera3_infra2_info_topic"         default="/$(arg camID3)/infra2/camera_info" />
 	<arg name="output_frame"                      default="$(arg robot_name)/$(arg base_link_frame)" />
 
-  <arg name="marker_size"                       default="3.4" />
+  <arg name="marker_size"                       default="3.75" />
 	<arg name="max_new_marker_error"              default="0.1" />
 	<arg name="max_track_error"                   default="0.25" />
 	<arg name="bundle_filename"                   default="pancake" />
@@ -167,7 +167,7 @@
     <arg name="use_pointcloud_tuner_gui"          value="$(arg use_pointcloud_tuner_gui)"/> -->
   <!-- </include> -->
 
-  <node if="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -179,7 +179,7 @@
 		<remap from="camera_info"   to="$(arg camera1_infra1_info_topic)" />
 	</node>
 
-  <node unless="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node unless="$(arg use_infra)" name="ar_track_alvar1" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -191,7 +191,7 @@
 		<remap from="camera_info"   to="$(arg camera1_color_info_topic)" />
 	</node>
 
-  <node if="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -203,7 +203,7 @@
 		<remap from="camera_info"   to="$(arg camera2_infra1_info_topic)" />
 	</node>
 
-  <node unless="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node unless="$(arg use_infra)" name="ar_track_alvar2" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -215,7 +215,7 @@
 		<remap from="camera_info"   to="$(arg camera2_color_info_topic)" />
 	</node>
 
-  <node if="$(arg use_infra)" name="ar_track_alvar3" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node if="$(arg use_infra)" name="ar_track_alvar3" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />
@@ -227,7 +227,7 @@
 		<remap from="camera_info"   to="$(arg camera3_infra1_info_topic)" />
 	</node>
 
-  <node unless="$(arg use_infra)" name="ar_track_alvar3" pkg="ar_track_alvar" type="findMarkerBundlesNoKinect" respawn="false" output="screen">
+  <node unless="$(arg use_infra)" name="ar_track_alvar3" pkg="ar_track_alvar" type="findMarkerBundlesSeparateTopics" respawn="false" output="screen">
 		<param name="marker_size"           type="double" value="$(arg marker_size)" />
 		<param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
 		<param name="max_track_error"       type="double" value="$(arg max_track_error)" />

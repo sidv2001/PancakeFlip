@@ -20,6 +20,7 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>std_srvs</build_depend>
+  <build_depend>ar_track_alvar_msgs</build_depend>
   <build_export_depend>interbotix_xs_msgs</build_export_depend>
   <build_export_depend>interbotix_xsarm_control</build_export_depend>
   <build_export_depend>rosbag</build_export_depend>
