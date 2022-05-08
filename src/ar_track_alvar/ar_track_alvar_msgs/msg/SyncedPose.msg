@@ -1,0 +1,6 @@
+Header header
+AlvarMarker cam1_marker
+AlvarMarker cam2_marker
+AlvarMarker cam3_marker
+AlvarMarker avg_marker
+sensor_msgs/JointState joint_states
