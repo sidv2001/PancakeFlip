@@ -4,7 +4,7 @@ joint_order: [waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate, g
 sleep_positions: [0, -1.80, 1.55, 0, 0.8, 0, 0]
 
 joint_state_publisher:
-  update_rate: 30
+  update_rate: 100
   publish_states: true
   topic_name: joint_states
 

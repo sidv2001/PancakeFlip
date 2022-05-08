@@ -71,22 +71,34 @@ void ar_pose_cb(const boost::shared_ptr<const ar_track_alvar_msgs::AlvarMarkers>
   pub_ar_tags.publish(ar_cams);
 }
 
-int main(int argc, char **argv) {
+void joint_state_cb(const sensor_msgs::JointState &msg)
+{
+  joint_states = msg;
+}
+
+void synced_pose_cb(const ar_track_alvar_msgs::AlvarMarkersMultiCam &msg)
+{
+  synced_pose = msg;
+}
+
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "xsarm_puppet_single");
   ros::NodeHandle n;
 
   typedef message_filters::sync_policies::ApproximateTime<ar_track_alvar_msgs::AlvarMarkers, ar_track_alvar_msgs::AlvarMarkers, ar_track_alvar_msgs::AlvarMarkers, sensor_msgs::JointState> MySyncPolicy;
-  ros::ServiceClient srv_robot_info = n.serviceClient<interbotix_xs_msgs::RobotInfo>("/wx250s/get_robot_info");
+  // ExactTime takes a queue size as its constructor argument, hence MySyncPolicy(10)
 
   // Subscribe to the robot's joint states and publish those states as joint commands so that rosbag can record them
   message_filters::Subscriber<sensor_msgs::JointState> joint_position_sub (n, "/wx250s/joint_states", 1);
-  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam1_sub   (n, "/pancake_pose_camera1", 1);
-  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam2_sub   (n, "/pancake_pose_camera2", 1);
-  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam3_sub   (n, "/pancake_pose_camera3", 1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam1_sub   (n, "/ar_pose_markers_camera1", 1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam2_sub   (n, "/ar_pose_markers_camera2", 1);
+  message_filters::Subscriber<ar_track_alvar_msgs::AlvarMarkers> ar_pose_cam3_sub   (n, "/ar_pose_markers_camera3", 1);
   pub_ar_tags = n.advertise<ar_track_alvar_msgs::AlvarMarkersMultiCam>("synced_pose", 1);
-  ros::Publisher pub_group = n.advertise<interbotix_xs_msgs::JointGroupCommand>("commands/joint_group", 1);
-  ros::Publisher pub_single = n.advertise<interbotix_xs_msgs::JointSingleCommand>("commands/joint_single", 1);
+  ros::Publisher pub_group = n.advertise<interbotix_xs_msgs::JointGroupCommand>("/wx250s/clean_cmds/joint_group", 1);
+  ros::Publisher pub_single = n.advertise<interbotix_xs_msgs::JointSingleCommand>("/wx250s/clean_cmds/joint_single", 1);
   // Get some robot info to figure out how many joints the robot has
+  ros::ServiceClient srv_robot_info = n.serviceClient<interbotix_xs_msgs::RobotInfo>("/wx250s/get_robot_info");
   message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), ar_pose_cam1_sub, ar_pose_cam2_sub, ar_pose_cam3_sub, joint_position_sub);
   sync.registerCallback(boost::bind(&ar_pose_cb, _1, _2, _3, _4));
 
@@ -131,17 +143,17 @@ int main(int argc, char **argv) {
   
   while (ros::ok())
   {
-    // put joint positions from the robot as position commands for itself
-    interbotix_xs_msgs::JointGroupCommand pos_msg;
-    pos_msg.name = "arm";
-    for (auto const& index : arm_info_srv.response.joint_state_indices)
-      pos_msg.cmd.push_back(joint_states.position.at(index));
-    pub_group.publish(pos_msg);
+    // // put joint positions from the robot as position commands for itself
+    // interbotix_xs_msgs::JointGroupCommand pos_msg;
+    // pos_msg.name = "arm";
+    // for (auto const& index : arm_info_srv.response.joint_state_indices)
+    //   pos_msg.cmd.push_back(joint_states.position.at(index));
+    // pub_group.publish(pos_msg);
 
-    interbotix_xs_msgs::JointSingleCommand single_msg;
-    single_msg.name = "gripper";
-    single_msg.cmd = joint_states.position.at(gripper_info_srv.response.joint_state_indices.at(0))*2;
-    pub_single.publish(single_msg);
+    // interbotix_xs_msgs::JointSingleCommand single_msg;
+    // single_msg.name = "gripper";
+    // single_msg.cmd = joint_states.position.at(gripper_info_srv.response.joint_state_indices.at(0))*2;
+    // pub_single.publish(single_msg);
 
     ros::spinOnce();
     loop_rate.sleep();

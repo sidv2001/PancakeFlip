@@ -48,3 +48,7 @@ add_dependencies(noisy_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED
 add_executable(clean_pub src/clean_pub.cpp)
 target_link_libraries(clean_pub ${catkin_LIBRARIES})
 add_dependencies(clean_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(synchronizer src/synchronizer.cpp)
+target_link_libraries(synchronizer ${catkin_LIBRARIES})
+add_dependencies(synchronizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
