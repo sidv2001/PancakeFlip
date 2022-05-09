@@ -304,6 +304,7 @@ void getCapCallback(const sensor_msgs::ImageConstPtr& image_msg)
         }
         else {
           ar_pose_marker.header.frame_id = "-1";
+          ar_pose_marker.header.stamp = image_msg->header.stamp;
           arPoseMarkers_.markers.push_back(ar_pose_marker);
         }
       }
