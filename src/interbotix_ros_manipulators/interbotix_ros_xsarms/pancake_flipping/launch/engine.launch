@@ -1,0 +1,51 @@
+<launch>
+  <arg name="use_infra"                         default="false"/>
+  <arg name="robot_model"                       default="wx250s"/>
+  <arg name="robot_name"                        default="$(arg robot_model)"/>
+  <arg name="base_link_frame"                   default="base_link"/>
+  
+  <arg name="record"                            default="false"/>
+  <arg name="playback"                          default="false"/>
+  <arg name="playback_rate"                     default="1"/>
+
+	<arg name="is_large"                          default="true" />
+	<arg name="bundle_filename"                   default="big_pancake"          if="$(arg is_large)"/>
+  <arg name="marker_size"                       default="3.75"                if="$(arg is_large)"/>
+  <arg name="bundle_filename"                   default="small_pancake"   unless="$(arg is_large)"/>
+  <arg name="marker_size"                       default="2"               unless="$(arg is_large)"/>
+
+  <arg name="camID1"                            default="camera1"/>
+  <arg name="camID2"                            default="camera2"/>
+  <arg name="camID3"                            default="camera3"/>
+
+  <arg name="rviz_frame"                        default="$(arg robot_name)/$(arg base_link_frame)"/>
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
+  <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
+  <arg name="mode_configs"                      default="$(find pancake_flipping)/config/playback_modes.yaml"/>
+
+
+  <include file="$(find pancake_flipping)/launch/three_cameras_multi_cam.launch" >
+    <arg name="marker_size"                     value="$(arg marker_size)" />
+    <arg name="use_infra"                       value="$(arg use_infra)"/>
+    <arg name="mode_configs"                    value="$(arg mode_configs)"/>
+    <arg name="rviz_frame"                      value="$(arg robot_name)/$(arg base_link_frame)"/>
+    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
+    <arg name="rvizconfig"                      value="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
+    <arg name="bundle_filename"                 value="$(arg bundle_filename)" />
+    <arg name="camID1"                          value="$(arg camID1)"/>
+    <arg name="camID2"                          value="$(arg camID2)"/>
+    <arg name="camID3"                          value="$(arg camID3)"/>
+  </include>
+
+  <node
+      name="rosbag_record_commands"
+      pkg="rosbag"
+      type="record"
+      args="record -O $(find pancake_flipping)/bag/test.bag 
+      /$(arg robot_name)/commands/joint_group"
+    /> 
+
+  <node pkg="pancake_flipping" name="planner" type="planner.py" respawn="false" output="screen"/>
+
+  <node pkg="pancake_flipping" name="synchronizer" type="synchronizer" respawn="false" output="screen"/>
+</launch>

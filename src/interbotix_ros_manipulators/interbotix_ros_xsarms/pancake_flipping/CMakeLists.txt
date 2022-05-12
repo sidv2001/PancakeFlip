@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   interbotix_xsarm_control
   rosbag
   roscpp
+  dynamixel_workbench_toolbox
+  ar_track_alvar_msgs
   tf2_ros
   rviz
   sensor_msgs
@@ -25,7 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## The catkin_package macro generates cmake config files for your package
 ## Declare things to be passed to dependent projects
 catkin_package(
- CATKIN_DEPENDS interbotix_xs_msgs interbotix_xsarm_control rosbag roscpp tf2_ros rviz sensor_msgs std_msgs std_srvs
+  CATKIN_DEPENDS interbotix_xs_msgs interbotix_xsarm_control dynamixel_workbench_toolbox rosbag roscpp tf2_ros rviz sensor_msgs std_msgs std_srvs
 )
 
 ###########
@@ -41,13 +43,17 @@ include_directories(
 ## Declare a C++ executable
 ## Specify libraries to link a library or executable target against
 ## Add cmake target dependencies of the executable
-add_executable(noisy_pub src/noisy_pub.cpp)
-target_link_libraries(noisy_pub ${catkin_LIBRARIES})
-add_dependencies(noisy_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_executable(noisy_pub src/noisy_pub.cpp)
+# target_link_libraries(noisy_pub ${catkin_LIBRARIES})
+# add_dependencies(noisy_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(clean_pub src/clean_pub.cpp)
-target_link_libraries(clean_pub ${catkin_LIBRARIES})
-add_dependencies(clean_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_executable(clean_pub src/clean_pub.cpp)
+# target_link_libraries(clean_pub ${catkin_LIBRARIES})
+# add_dependencies(clean_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(triggered_synchronizer src/triggered_synchronizer.cpp)
+target_link_libraries(triggered_synchronizer ${catkin_LIBRARIES})
+add_dependencies(triggered_synchronizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(synchronizer src/synchronizer.cpp)
 target_link_libraries(synchronizer ${catkin_LIBRARIES})

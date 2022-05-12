@@ -1,5 +1,5 @@
 <launch>
-  <arg name="use_infra"                         default="true"/>
+  <arg name="use_infra"                         default="false"/>
   <arg name="robot_model"                       default="wx250s"/>
   <arg name="robot_name"                        default="$(arg robot_model)"/>
   <arg name="base_link_frame"                   default="base_link"/>
@@ -8,6 +8,7 @@
   <arg name="record"                            default="false"/>
   <arg name="playback"                          default="false"/>
   <arg name="playback_rate"                     default="1"/>
+  <!-- <arg name="set_exposure"                      default="0"/> -->
 
 	<arg name="is_large"                          default="1" />
 	<arg name="bundle_filename"                   default="big_pancake"         if="$(arg is_large)"/>
@@ -23,8 +24,10 @@
   <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras_infra.rviz"    if="$(arg use_infra)" />
   <arg name="rvizconfig"                        default="$(find pancake_flipping)/rviz/three_cameras.rviz"      unless="$(arg use_infra)" />
 
-  <arg if="$(arg record)"   name="mode_configs" value="$(find pancake_flipping)/config/record_modes.yaml"/>
+  <arg if="$(arg record)"   name="mode_configs" value="$(find pancake_flipping)/config/playback_modes.yaml"/>
   <arg if="$(arg playback)" name="mode_configs" value="$(find pancake_flipping)/config/playback_modes.yaml"/>
+
+  <!-- <node if="$(arg set_exposure)" pkg="pancake_flipping" type="set_exposure.sh" name="set_exposure" output="screen" respawn="false"/> -->
 
   <group if="$(arg playback)">
     <include file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch">
@@ -62,11 +65,13 @@
     </include>
 
       <node
-      name="synchronizer"
+      name="triggered_synchronizer"
       pkg="pancake_flipping"
-      type="synchronizer"
+      type="triggered_synchronizer"
       respawn="false"
       output="screen"/>
+
+      <node pkg="pancake_flipping" name="trigger" type="trigger.py" respawn="false" output="screen"/>
 
       <node
       if="$(arg use_infra)"

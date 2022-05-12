@@ -14,7 +14,7 @@ from ar_track_alvar_msgs.msg import AlvarMarkers
 
 class PancakeOrienter:
     def __init__(self, bot_type="wx250s", moving_time=2, accel_time=1, dof=6, target_position_type='front', test_mode = False, 
-                 pancake_diam=0.0508, radius_tolerance=1.3):
+                 pancake_diam=0.0508, radius_tolerance=1.3, bot=None, shape='circle'):
 
         # self.ee_offset = 0.0308 # estimated offset from end of pan handle to ee position
 
@@ -31,6 +31,7 @@ class PancakeOrienter:
         pan_edge_offset = 0.0125 # Offset from edge of pan to flat inner surface
         len_pan = 0.215    # Length of entire pan
         len_handle = 0.09 # Length of just handle
+        self.shape = shape
         
         # Pancake parameters
         # pancake_diam = 0.0508
@@ -66,7 +67,6 @@ class PancakeOrienter:
         else:
             raise NotImplementedError('Invalid target position chosen, please specify front or back of pan')
 
-
         self.bot_type = bot_type
         self.dof = dof
         self.test_mode = test_mode
@@ -78,11 +78,17 @@ class PancakeOrienter:
 
         # self.joint_states_listener = rospy.Subscriber('/' + bot_type + '/joint_states', JointState, self.set_ee_position)
         if test_mode:
-            self.bot = InterbotixManipulatorXS(bot_type, "arm", "gripper", moving_time=5, accel_time=3)
+            if bot != None:
+                self.bot = InterbotixManipulatorXS(bot_type, "arm", "gripper", moving_time=5, accel_time=3)
+            else:
+                self.bot = bot
             self.bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
             self.bot.dxl.robot_set_operating_modes("single", "arm", "current", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
         else:
-            self.bot = InterbotixManipulatorXS(bot_type, "arm", "gripper", moving_time=moving_time, accel_time=accel_time)
+            if bot != None:
+                self.bot = InterbotixManipulatorXS(bot_type, "arm", "gripper", moving_time=moving_time, accel_time=accel_time)
+            else:
+                self.bot = bot
             self.bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
             self.bot.dxl.robot_set_operating_modes("single", "arm", "current", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
 
@@ -115,10 +121,8 @@ class PancakeOrienter:
         
         while not self.end_reorientation:
             rospy.sleep(1.)
-        
-        self.bot.arm.set_joint_positions(self.home_joint_position)
 
-        return self.reorientation_succeeded
+        return self.reorientation_succeeded, self.bot
 
     def open_pancake_topic(self):
         self.pancake_state_listener = rospy.Subscriber(self.pancake_topic, AlvarMarkers, callback=self.reorientation_loop, callback_args=self.pancake_topic, queue_size=None)
@@ -173,7 +177,7 @@ class PancakeOrienter:
         alvar_marker = alvar_markers[-1]
         position = alvar_marker.pose.pose.position
         position_vect = np.array([position.x, position.y, position.z])
-        if not self.check_position(position_vect): #TODO: check that all cameras are getting a true value in closeness
+        if not self.check_position(position_vect, alvar_marker.pose.pose.orientation): #TODO: check that all cameras are getting a true value in closeness
             self.minor_correction()
         else:
             self.close_pancake_topic()
@@ -231,7 +235,7 @@ class PancakeOrienter:
 
 
 
-    def check_position(self, pancake_position, eps=1e-2):
+    def check_position(self, pancake_position, orientation, eps=1e-2):
         """
         Parameters:
             translation (np.array): 3 length vector
@@ -241,7 +245,8 @@ class PancakeOrienter:
             at_positon (bool): true or false value for pancake at correct x position
         """
 
-        M = self.bot.arm.get_ee_pose() 
+        M = self.bot.arm.get_ee_pose()
+        rotation_ee = M[:3, :3]
         target_position = M @ self.target_translation
         target_position = target_position[0:3]
 
@@ -256,11 +261,70 @@ class PancakeOrienter:
         return np.allclose(target_position[0:2], pancake_position[0:2], atol=eps)
         
 
+def reorient_pancake(moving_time=2, accel_time=1, dof=6, target_position_type='front', test_mode = False, 
+                 pancake_diam=0.0508, radius_tolerance=1.3, shape='circle'):
+    pancake_orienter = PancakeOrienter(moving_time=moving_time, accel_time=accel_time, dof=dof, target_position_type=target_position_type, test_mode = test_mode, 
+                 pancake_diam=pancake_diam, radius_tolerance=radius_tolerance, shape=shape)
+    reorient_succeeded, bot = pancake_orienter.run_reorientation()
+    bot.arm.set_joint_position(pancake_orienter.home_joint_position)
+
+    return reorient_succeeded
+
+
+
+def naive_correction():
+    front_tilt_joint_positions = [0, -1.30, 1.0, 0, 0.70, 0]
+    bot = InterbotixManipulatorXS("wx250s", "arm", "gripper", moving_time=5, accel_time=3)
+    bot.dxl.robot_set_operating_modes("group", "arm", "position", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
+    bot.dxl.robot_set_operating_modes("single", "arm", "current", profile_type="time", profile_velocity=5000, profile_acceleration=5000)
+
+    tilt = 0.20
+
+    bot.arm.set_joint_positions(front_tilt_joint_positions, moving_time=4, accel_time=2)
+    left_tilt = front_tilt_joint_positions.copy()
+    up = front_tilt_joint_positions.copy()
+    up[-2] = up[-2] - 0.15
+    left_tilt[0] = -tilt
+    # left_tilt[-2] = left_tilt[-2] - 0.05
+    right_tilt = front_tilt_joint_positions.copy()
+    down = front_tilt_joint_positions.copy()
+    down[-2] = down[-2] + 0.15
+    right_tilt[0] = tilt
+    # right_tilt[-2] = right_tilt[-2] + 0.05
+    tilt_corrections = 5
+    converge_val = tilt/tilt_corrections
+
+    accel_time = 0.15
+    accel_converge = 0.01
+
+    for i in range(tilt_corrections):
+        bot.arm.set_joint_positions(left_tilt, moving_time=0.4, accel_time=accel_time)
+
+        bot.arm.set_joint_positions(right_tilt, moving_time=0.4, accel_time=accel_time)
+        left_tilt[0] += converge_val
+        right_tilt[0] -= converge_val
+
+        accel_time -= accel_converge
+
+
+        # for i in range(2):
+        #     bot.arm.set_joint_positions(up)
+        #     bot.arm.set_joint_positions(down)
+
+    # home_joint_position = [0, -1.80, 1.55, 0, 0.55, 0]
+
+    bot.arm.go_to_sleep_pose(moving_time=4, accel_time=2)
+
+
+
+
 if __name__ == "__main__":
-    print("start small pancake reorient")
-    pancake_orienter = PancakeOrienter(test_mode=True, target_position_type='back')
-    print("small pancake reorientation succeeded: ", pancake_orienter.run_reorientation())
-    print()
+    # print("start small pancake reorient")
+    # print("small pancake reorientation succeeded: ", reorient_pancake())
+    # print()
+
+    naive_correction()
+
     # print("Sleeping for 5 seconds, please replace small pancake with large")
     # print()
     # sleep(5)

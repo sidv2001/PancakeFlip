@@ -32,7 +32,7 @@
   <arg name="enable_color"                      default="0"             if="$(arg use_infra)"/>
   <arg name="enable_color"                      default="1"         unless="$(arg use_infra)"/>
   <arg name="enable_depth"                      default="0"             if="$(arg use_infra)"/>
-  <arg name="enable_depth"                      default="1"         unless="$(arg use_infra)"/>
+  <arg name="enable_depth"                      default="0"         unless="$(arg use_infra)"/>
 
   <arg name="filter_ns"                         default="pc_filter"/>
   <arg name="filter_params"                     default="$(find interbotix_xsarm_perception)/config/filter_params.yaml"/>

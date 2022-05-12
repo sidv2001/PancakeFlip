@@ -12,11 +12,11 @@ from pos_2_vel import convert_bag_to_vel
 # ______________________________ <CONSTANTS> ___________________________________________________________
 # [Waist, Shoulder, ... , Wrist]
 NEW_HOME = [0, -1.80, 1.55, 0, 0.55, 0]
-POS = [-.25, 0 , 0, 0, 0, 1.57]
+POS = [.25, 0 , 0, 0, 0, 1.57/2]
 # These are set through trial and error. Nothing special about these particular values
 # Notice that VEL1 = -VEL2. Running each of these joint velocites for the same amount of time
 # will cancel each other out.
-VEL1 = [0, 0.4, -0.4, 0, 0, -0.1] 
+VEL1 = [0, 0.4, -0.2, 0, -0.25, 0] 
 VEL2 = [0, -0.4 , 0.4, 0, 0, 0.1]
 DURATION = 5 # seconds
 EPSILON = 0.03 # seconds
@@ -37,18 +37,20 @@ def main():
     # print(bot.dxl.srv_get_info("group", "arm"))
 
     # Position Control
-    bot.arm.go_to_home_pose()
-    sleep(100000)
-    bot.arm.set_joint_positions(POS)
-    bot.arm.go_to_home_pose()
+    # bot.arm.go_to_home_pose()
+    # sleep(1)
+    # bot.arm.set_joint_positions(POS)
+    # bot.arm.go_to_home_pose()
     
-    bot.arm.set_joint_positions(NEW_HOME)
+    # bot.arm.set_joint_positions(NEW_HOME)
 
     # # Velocity Control
     bot.dxl.robot_set_operating_modes("group", "arm", "velocity", profile_type="time")
     rospy.loginfo(f'Running VEL1 for {DURATION} seconds.')
     bot.dxl.robot_write_commands("arm", VEL1)
     sleep(DURATION)
+    bot.dxl.robot_write_commands("arm", HALT)
+    sleep(1000)
     rospy.loginfo(f'Running VEL2 for {DURATION-EPSILON} seconds.')
     bot.dxl.robot_write_commands("arm", VEL2)
     sleep(DURATION-EPSILON)
