@@ -49,9 +49,6 @@ def pose_cb(synced_pose : SyncedPose, args):
     msg.cmd = cmd
     pub.publish(msg)
 
-    # Write model outputs to robot
-    bot.dxl.robot_write_commands("arm", cmd) # Send command for robot to execute
-
 
 def main():
     rospy.init_node('trigger')

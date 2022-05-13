@@ -44,7 +44,7 @@ class RobotNet(nn.Module):
         logits = self.layers(data)
         return logits
 
-class RoboticRegression(pl.LightningModule):
+class RoboticRegressionVel(pl.LightningModule):
     
     def __init__(self, dropout, output_dims):
         super().__init__()
@@ -108,7 +108,7 @@ def objective(trial):
         trial.suggest_int("n_units_l{}".format(i), 20, 200, log=True) for i in range(n_layers)
     ]
 
-    model = RoboticRegression(dropout, output_dims)
+    model = RoboticRegressionVel(dropout, output_dims)
     datamodule = RoboticsDataModule("csv", "csv_val", 128)
 
     trainer = pl.Trainer(
@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
     # # trainer.validate(model, dataloaders=datamodule, verbose=True)
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    model = RoboticRegression.load_from_checkpoint(os.path.join("robot-epoch=71-val_loss=0.02.ckpt"))
+    model = RoboticRegressionVel.load_from_checkpoint(os.path.join("robot-epoch=71-val_loss=0.02.ckpt"))
     print(model)
     # ckpt_path = os.path.join(os.getcwd(), 'robot-epoch=71-val_loss=0.02.ckpt')
     # ckpt = torch.load(ckpt_path)
